@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+	<VersionPrefix>1.0</VersionPrefix>
+	<VersionSufix>alpha-1</VersionSufix>
+
+	<Version>$(VersionPrefix)</Version>
+	<FileVersion>$(VersionPrefix)</FileVersion>
+	<AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+	<InformationalVersion Condition="'$(VersionSufix)' == ''">$(VersionPrefix)</InformationalVersion>
+	<InformationalVersion Condition="'$(VersionSufix)' != ''">$(VersionPrefix)-$(VersionSufix)</InformationalVersion>
+
+	<Authors>Hamed Bonakdar</Authors>
+	<CompanyName>Tizpusoft</CompanyName>
+	<Copyright>© $(CompanyName) $([System.DateTime]::UtcNow.Year) - All Rights Reserved</Copyright>
+	<AssemblyTitleSufix>$([System.DateTime]::UtcNow.ToString(yyyy-MM-dd HH:mm:ss))</AssemblyTitleSufix>
+	<Product>Tizpusoft Downloader</Product>
+
+	<RootNamespace>Downloader</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="CommandLineParser" Version="2.9.1" />
+	  <PackageReference Include="Serilog" Version="4.2.0" />
+	  <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+  </ItemGroup>
+
+</Project>
