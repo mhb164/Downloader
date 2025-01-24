@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
 
 	<VersionPrefix>1.0</VersionPrefix>
-	<VersionSufix>alpha-1</VersionSufix>
+	<VersionSufix>alpha-2</VersionSufix>
 
 	<Version>$(VersionPrefix)</Version>
 	<FileVersion>$(VersionPrefix)</FileVersion>
@@ -22,7 +22,13 @@
 	<Product>Tizpusoft Downloader</Product>
 
 	<RootNamespace>Downloader</RootNamespace>
+
+	<ApplicationIcon>downloader.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="downloader.ico" />
+  </ItemGroup>
 
   <ItemGroup>
 	  <PackageReference Include="CommandLineParser" Version="2.9.1" />
