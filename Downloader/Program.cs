@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using Serilog;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -15,6 +16,8 @@ internal partial class Program
     public const int DirectoryNotFoundCode = -1;
     public const int AllNotDownloadedCode = -2;
     public const int AllDownloadedCode = 0;
+    private const string ContentInfoDirectoryName = "ContentInfo";
+
     private static HttpClientHandler BypassSSLHandler => new HttpClientHandler
     {
         ServerCertificateCustomValidationCallback = (HttpRequestMessage request, X509Certificate2? cert, X509Chain? chain, SslPolicyErrors errors) => true
@@ -27,7 +30,7 @@ internal partial class Program
             .WriteTo.Console()
             .CreateLogger();
 
-        //Test(); return;
+        Test(); return;
 
         Parser.Default.ParseArguments<DownloadCommandParameters>(args)
             .WithParsed(parameters => Handle(parameters));
@@ -41,7 +44,8 @@ internal partial class Program
             ConcurrentDownloadCount = 5,
             RetryCount = 15,
             Username = null,
-            Password = null
+            Password = null,
+            CreateContentInfo = true,
         });
     }
 
@@ -126,6 +130,7 @@ internal partial class Program
     private static async Task<bool> Download(DownloadCommandParameters parameters, DownloadItem downloadItem)
     {
         var httpClient = new HttpClient(BypassSSLHandler) { Timeout = Timeout.InfiniteTimeSpan };
+        var outputDirectory = parameters.Directory;
         var outputFileName = Path.Combine(parameters.Directory, downloadItem.Name.FixInvalidChars("-"));
 
         for (int retryNumber = 1; retryNumber <= parameters.RetryCount; retryNumber++)
@@ -162,6 +167,10 @@ internal partial class Program
                     }
                     await content.FlushAsync();
                 }
+
+                if (parameters.CreateContentInfo)
+                    await CreateContentInfo(outputDirectory, outputFileName);
+
                 File.Delete(downloadItem.Filename);
                 stopwatch.Stop();
                 Log.Information("Download completed [retry #{RetryNumber} - timeout:{TimeoutSeconds}s]> {Title} @{ElapsedTotalSeconds:N2}s\r\n  - Address: {Address}",
@@ -184,6 +193,19 @@ internal partial class Program
         }
 
         return false;
+    }
+
+    private static async Task CreateContentInfo(string outputDirectory, string outputFileName)
+    {
+        var contentInfoDirectory = Path.Combine(outputDirectory, ContentInfoDirectoryName);
+        if (!Directory.Exists(contentInfoDirectory))
+            Directory.CreateDirectory(contentInfoDirectory);
+
+        var contentInfo = await ContentInfo.CreateAsync(outputFileName);
+        var contentInfoPath = Path.Combine(contentInfoDirectory, $"{contentInfo.Name}.json");
+        await File.WriteAllTextAsync(contentInfoPath, JsonSerializer.Serialize(contentInfo));
+
+        Log.Information("contentInfo> Created on '{Path}'.", contentInfoPath);
     }
 }
 

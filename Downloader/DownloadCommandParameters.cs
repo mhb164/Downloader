@@ -18,5 +18,8 @@ public class DownloadCommandParameters
 
     [Option('p', "password")]
     public string? Password { get; set; }
+
+    [Option('i', "create-content-info")]
+    public bool CreateContentInfo { get; set; }
 }
 
