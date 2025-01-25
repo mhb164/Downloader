@@ -30,7 +30,7 @@ internal partial class Program
             .WriteTo.Console()
             .CreateLogger();
 
-        Test(); return;
+        //Test(); return;
 
         Parser.Default.ParseArguments<DownloadCommandParameters>(args)
             .WithParsed(parameters => Handle(parameters));
