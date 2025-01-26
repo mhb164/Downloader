@@ -6,15 +6,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-	<VersionPrefix>2.4</VersionPrefix>
-	<VersionSufix>beta-4</VersionSufix>
+	<VersionPrefix>2.5</VersionPrefix>
+	<VersionSufix>beta-5</VersionSufix>
 
 	<Version>$(VersionPrefix)</Version>
 	<FileVersion>$(VersionPrefix)</FileVersion>
 	<AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
 	<InformationalVersion Condition="'$(VersionSufix)' == ''">$(VersionPrefix)</InformationalVersion>
 	<InformationalVersion Condition="'$(VersionSufix)' != ''">$(VersionPrefix)-$(VersionSufix)</InformationalVersion>
-
+	<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+	  
 	<Authors>Hamed Bonakdar</Authors>
 	<CompanyName>Tizpusoft</CompanyName>
 	<Copyright>© $(CompanyName) $([System.DateTime]::UtcNow.Year) - All Rights Reserved</Copyright>
