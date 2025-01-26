@@ -5,10 +5,10 @@ namespace Downloader;
 public class DownloadCommandParameters
 {
     [Option('t', "log-tag")]
-    public string LogTag { get; set; }
+    public string? LogTag { get; set; }
 
     [Option('d', "directory", Required = true)]
-    public string Directory { get; set; }
+    public string? Directory { get; set; }
 
     [Option('c', "concurrent-count", Required = true)]
     public int ConcurrentDownloadCount { get; set; }

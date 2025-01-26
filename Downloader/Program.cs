@@ -10,12 +10,13 @@ using System.Text.Json;
 
 namespace Downloader;
 
-//Downloader -d "directory" -c 5 -r 10 -u "user" -p "pass"
+//Downloader -t tag -d "directory" -c 5 -r 10 -u "user" -p "pass" -i true
 internal partial class Program
 {
-    public const int DirectoryNotFoundCode = -1;
-    public const int AllNotDownloadedCode = -2;
-    public const int AllDownloadedCode = 0;
+    public const int DirectoryNotFoundExitCode = -1;
+    public const int AllNotDownloadedExitCode = -2;
+    public const int ExceptionExitCode = -3;
+    public const int AllDownloadedExitCode = 0;
     private const string ContentInfoDirectoryName = "ContentInfo";
 
     private static HttpClientHandler BypassSSLHandler => new HttpClientHandler
@@ -53,11 +54,26 @@ internal partial class Program
     {
         if (string.IsNullOrWhiteSpace(parameters.LogTag))
             parameters.LogTag = Guid.NewGuid().ToString("N").ToUpper();
+        else
+            parameters.LogTag = parameters.LogTag.Trim();
 
+        try
+        {
+            HandleWithoutExceptionHandling(parameters);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Downloader {LogTag}> Unknown error occurred!", parameters.LogTag);
+        }
+    }
+
+    private static void HandleWithoutExceptionHandling(DownloadCommandParameters parameters)
+    {
+        parameters.Directory = parameters.Directory?.Trim() ?? string.Empty;
         if (!Directory.Exists(parameters.Directory))
         {
             Log.Error("Downloader {LogTag}> Directory '{Directory}' not found!", parameters.LogTag, parameters.Directory);
-            Environment.Exit(DirectoryNotFoundCode);
+            Environment.Exit(DirectoryNotFoundExitCode);
         }
 
         var downloadItems = new List<DownloadItem>();
@@ -95,18 +111,18 @@ internal partial class Program
         if (!allDownloaded)
         {
             Log.Error("Downloader {LogTag}> All not downloaded! ({Directory})", parameters.LogTag, parameters.Directory);
-            Environment.Exit(AllNotDownloadedCode);
+            Environment.Exit(AllNotDownloadedExitCode);
         }
 
         Log.Information("Downloader {LogTag}> All downloaded. ({Directory})", parameters.LogTag, parameters.Directory);
-        Environment.Exit(AllDownloadedCode);
+        Environment.Exit(AllDownloadedExitCode);
     }
 
     private static async Task<bool> Download(DownloadCommandParameters parameters, List<DownloadItem> downloadItems)
     {
         var downloadTasks = new List<Task>();
         var throttler = new SemaphoreSlim(parameters.ConcurrentDownloadCount);
-        var downloadedCount = 0l;
+        var downloadedCount = 0L;
 
         foreach (var downloadItem in downloadItems)
         {

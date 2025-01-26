@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-	<VersionPrefix>2.3</VersionPrefix>
-	<VersionSufix>beta-3</VersionSufix>
+	<VersionPrefix>2.4</VersionPrefix>
+	<VersionSufix>beta-4</VersionSufix>
 
 	<Version>$(VersionPrefix)</Version>
 	<FileVersion>$(VersionPrefix)</FileVersion>
