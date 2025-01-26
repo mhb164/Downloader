@@ -51,9 +51,12 @@ internal partial class Program
 
     private static void Handle(DownloadCommandParameters parameters)
     {
+        if (string.IsNullOrWhiteSpace(parameters.LogTag))
+            parameters.LogTag = Guid.NewGuid().ToString("N").ToUpper();
+
         if (!Directory.Exists(parameters.Directory))
         {
-            Log.Error("Directory '{Directory}' not found!", parameters.Directory);
+            Log.Error("Downloader {LogTag}> Directory '{Directory}' not found!", parameters.LogTag, parameters.Directory);
             Environment.Exit(DirectoryNotFoundCode);
         }
 
@@ -66,7 +69,7 @@ internal partial class Program
                 var downloadItem = JsonSerializer.Deserialize<DownloadItem>(content);
                 if (downloadItem is null)
                 {
-                    Log.Error("File '{Filename}' is wrong!", filename);
+                    Log.Error("Downloader {LogTag}> File '{Filename}' is wrong!", parameters.LogTag, filename);
                     continue;
                 }
                 downloadItem.Filename = filename;
@@ -74,28 +77,28 @@ internal partial class Program
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "File '{Filename}' is wrong!", filename);
+                Log.Error(ex, "Downloader {LogTag}> File '{Filename}' is wrong!", parameters.LogTag, filename);
             }
         }
 
-        Log.Information("Download {Count} \r\n" +
+        Log.Information("Downloader {LogTag}> Download {Count} \r\n" +
                         " - Directory: '{Directory}' \r\n" +
                         " - ConcurrentDownload: '{ConcurrentDownload}' \r\n" +
                         " - RetryCount: '{RetryCount}' \r\n" +
                         " - Username: '{Username}' \r\n" +
                         " - Password: {Password}",
-            downloadItems.Count, parameters.Directory, parameters.ConcurrentDownloadCount,
+            parameters.LogTag, downloadItems.Count, parameters.Directory, parameters.ConcurrentDownloadCount,
             parameters.RetryCount, parameters.Username, (parameters.Username is null ? null : "*****"));
 
         var allDownloaded = Download(parameters, downloadItems).GetAwaiter().GetResult();
 
         if (!allDownloaded)
         {
-            Log.Error("All not downloaded! ({Directory})", parameters.Directory);
+            Log.Error("Downloader {LogTag}> All not downloaded! ({Directory})", parameters.LogTag, parameters.Directory);
             Environment.Exit(AllNotDownloadedCode);
         }
 
-        Log.Information("All downloaded. ({Directory})", parameters.Directory);
+        Log.Information("Downloader {LogTag}> All downloaded. ({Directory})", parameters.LogTag, parameters.Directory);
         Environment.Exit(AllDownloadedCode);
     }
 
@@ -138,8 +141,8 @@ internal partial class Program
             var stopwatch = new Stopwatch();
             try
             {
-                Log.Information("Download started [timeout:{TimeoutSeconds}s]> {Title} \r\n  - Address: {Address}",
-                    downloadItem.Timeout.TotalSeconds, downloadItem.Name, downloadItem.Address);
+                Log.Information("Downloader {LogTag}> Download started [timeout:{TimeoutSeconds}s]> {Title} \r\n  - Address: {Address}",
+                    parameters.LogTag, downloadItem.Timeout.TotalSeconds, downloadItem.Name, downloadItem.Address);
 
                 stopwatch.Restart();
                 using var requestMessage = new HttpRequestMessage
@@ -169,12 +172,12 @@ internal partial class Program
                 }
 
                 if (parameters.CreateContentInfo)
-                    await CreateContentInfo(outputDirectory, outputFileName);
+                    await CreateContentInfo(parameters.LogTag, outputDirectory, outputFileName);
 
                 File.Delete(downloadItem.Filename);
                 stopwatch.Stop();
-                Log.Information("Download completed [retry #{RetryNumber} - timeout:{TimeoutSeconds}s]> {Title} @{ElapsedTotalSeconds:N2}s\r\n  - Address: {Address}",
-                    retryNumber, downloadItem.Timeout.TotalSeconds,
+                Log.Information("Downloader {LogTag}> Download completed [retry #{RetryNumber} - timeout:{TimeoutSeconds}s]> {Title} @{ElapsedTotalSeconds:N2}s\r\n  - Address: {Address}",
+                    parameters.LogTag, retryNumber, downloadItem.Timeout.TotalSeconds,
                     downloadItem.Name, stopwatch.Elapsed.TotalSeconds, downloadItem.Address);
 
                 return true;
@@ -185,8 +188,8 @@ internal partial class Program
                 if (retryNumber == parameters.RetryCount)
                     waitTime = 0;
 
-                Log.Warning(ex, "Download error [retry #{RetryNumber} - timeout:{TimeoutSeconds}s]> {Title} @{ElapsedTotalSeconds:N2}s (Wait: {WaitTime}ms)\r\n  - Address: {Address}",
-                   retryNumber, downloadItem.Timeout.TotalSeconds,
+                Log.Warning(ex, "Downloader {LogTag}> Download error [retry #{RetryNumber} - timeout:{TimeoutSeconds}s]> {Title} @{ElapsedTotalSeconds:N2}s (Wait: {WaitTime}ms)\r\n  - Address: {Address}",
+                   parameters.LogTag, retryNumber, downloadItem.Timeout.TotalSeconds,
                    downloadItem.Name, stopwatch.Elapsed.TotalSeconds, waitTime, downloadItem.Address);
                 await Task.Delay(waitTime);
             }
@@ -195,7 +198,7 @@ internal partial class Program
         return false;
     }
 
-    private static async Task CreateContentInfo(string outputDirectory, string outputFileName)
+    private static async Task CreateContentInfo(string logTag, string outputDirectory, string outputFileName)
     {
         var contentInfoDirectory = Path.Combine(outputDirectory, ContentInfoDirectoryName);
         if (!Directory.Exists(contentInfoDirectory))
@@ -205,7 +208,7 @@ internal partial class Program
         var contentInfoPath = Path.Combine(contentInfoDirectory, $"{contentInfo.Name}.json");
         await File.WriteAllTextAsync(contentInfoPath, JsonSerializer.Serialize(contentInfo));
 
-        Log.Information("contentInfo> Created on '{Path}'.", contentInfoPath);
+        Log.Information("Downloader {LogTag}> contentInfo> Created on '{Path}'.", logTag, contentInfoPath);
     }
 }
 

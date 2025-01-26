@@ -4,6 +4,9 @@ namespace Downloader;
 
 public class DownloadCommandParameters
 {
+    [Option('t', "log-tag")]
+    public string LogTag { get; set; }
+
     [Option('d', "directory", Required = true)]
     public string Directory { get; set; }
 
