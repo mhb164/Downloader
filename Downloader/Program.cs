@@ -70,6 +70,9 @@ internal partial class Program
     private static void HandleWithoutExceptionHandling(DownloadCommandParameters parameters)
     {
         parameters.Directory = parameters.Directory?.Trim() ?? string.Empty;
+        parameters.Username = parameters.Username?.Trim();
+        parameters.Password = parameters.Password?.Trim();
+
         if (!Directory.Exists(parameters.Directory))
         {
             Log.Error("Downloader {LogTag}> Directory '{Directory}' not found!", parameters.LogTag, parameters.Directory);
