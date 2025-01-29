@@ -129,7 +129,6 @@ internal partial class Program
 
         foreach (var downloadItem in downloadItems)
         {
-            var item = downloadItem;
             await throttler.WaitAsync();
             downloadTasks.Add(Task.Run(async () =>
             {
@@ -178,16 +177,19 @@ internal partial class Program
                 }
 
                 using (var response = await httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, new CancellationTokenSource(downloadItem.Timeout).Token))
-                using (var remoteStream = await response.Content.ReadAsStreamAsync())
-                using (var content = File.Create(outputFileName))
                 {
-                    var buffer = new byte[4096];
-                    int read;
-                    while ((read = await remoteStream.ReadAsync(buffer, 0, buffer.Length)) != 0)
+                    response.EnsureSuccessStatusCode();
+                    using (var remoteStream = await response.Content.ReadAsStreamAsync())
+                    using (var content = File.Create(outputFileName))
                     {
-                        await content.WriteAsync(buffer, 0, read);
+                        var buffer = new byte[4096];
+                        int read;
+                        while ((read = await remoteStream.ReadAsync(buffer, 0, buffer.Length)) != 0)
+                        {
+                            await content.WriteAsync(buffer, 0, read);
+                        }
+                        await content.FlushAsync();
                     }
-                    await content.FlushAsync();
                 }
 
                 if (parameters.CreateContentInfo)
